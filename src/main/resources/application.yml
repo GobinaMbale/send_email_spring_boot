@@ -41,3 +41,9 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+variable:
+  img_1: ${IMAGE_1}
+  img_2: ${IMAGE_2}
+  img_logo: ${IMAGE_LOGO}
+  document_file: ${DOCUMENR_FILE}
