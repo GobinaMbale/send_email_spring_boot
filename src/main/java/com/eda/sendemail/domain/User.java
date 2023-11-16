@@ -18,6 +18,7 @@ public class User {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
+    @Column(name = "email", unique = true)
     private String email;
     private String password;
     private boolean isEnabled;

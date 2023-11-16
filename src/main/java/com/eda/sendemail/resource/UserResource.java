@@ -18,31 +18,67 @@ import java.util.Map;
 public class UserResource {
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<HttpResponse> createUser(@RequestBody User user) {
-        User newUser = userService.saveUser(user);
+    @PostMapping("/createUserAndSendSimpleMailMessage")
+    public ResponseEntity<HttpResponse> createUserAndSendSimpleMailMessage(@RequestBody User user) {
+        User newUser = userService.saveUserAndSendSimpleMailMessage(user);
         return ResponseEntity.created(URI.create("")).body(
-                HttpResponse.builder()
-                        .timeStamp(LocalDateTime.now().toString())
-                        .data(Map.of("user", newUser))
-                        .message("User created")
-                        .status(HttpStatus.CREATED)
-                        .statusCode(HttpStatus.CREATED.value())
-                        .build()
+                responseApi( "createUserAndSendSimpleMailMessage", "user",
+                        newUser, HttpStatus.CREATED, HttpStatus.CREATED.value())
         );
     }
 
-    @GetMapping
+    @PostMapping("/createUserAndSendHtmlEmail")
+    public ResponseEntity<HttpResponse> createUserAndSendHtmlEmail(@RequestBody User user) {
+        User newUser = userService.saveUserAndSendHtmlEmail(user);
+        return ResponseEntity.created(URI.create("")).body(
+                responseApi( "createUserAndSendHtmlEmail", "user",
+                        newUser, HttpStatus.CREATED, HttpStatus.CREATED.value())
+        );
+    }
+
+    @PostMapping("/createUserAndSendHtmlEmailWithEmbeddedFiles")
+    public ResponseEntity<HttpResponse> createUserAndSendHtmlEmailWithEmbeddedFiles(@RequestBody User user) {
+        User newUser = userService.saveUserAndSendHtmlEmailWithEmbeddedFiles(user);
+        return ResponseEntity.created(URI.create("")).body(
+                responseApi( "createUserAndSendHtmlEmailWithEmbeddedFiles", "user",
+                        newUser, HttpStatus.CREATED, HttpStatus.CREATED.value())
+        );
+    }
+
+    @PostMapping("/createUserAndSendMimeMessageWithAttachments")
+    public ResponseEntity<HttpResponse> createUserAndSendMimeMessageWithAttachments(@RequestBody User user) {
+        User newUser = userService.saveUserAndSendMimeMessageWithAttachments(user);
+        return ResponseEntity.created(URI.create("")).body(
+                responseApi( "createUserAndSendMimeMessageWithAttachments", "user",
+                        newUser, HttpStatus.CREATED, HttpStatus.CREATED.value())
+        );
+    }
+
+    @PostMapping("/createUserAndSendMimeMessageWithEmbeddedImages")
+    public ResponseEntity<HttpResponse> createUserAndSendMimeMessageWithEmbeddedImages(@RequestBody User user) {
+        User newUser = userService.saveUserAndSendMimeMessageWithEmbeddedImages(user);
+        return ResponseEntity.created(URI.create("")).body(
+                responseApi( "createUserAndSendMimeMessageWithEmbeddedImages", "user",
+                        newUser, HttpStatus.CREATED, HttpStatus.CREATED.value())
+        );
+    }
+
+    @GetMapping("/confirmUserAccount")
     public ResponseEntity<HttpResponse> confirmUserAccount(@RequestParam("token") String token) {
         Boolean isSuccess = userService.verifyToken(token);
         return ResponseEntity.ok().body(
-                HttpResponse.builder()
-                        .timeStamp(LocalDateTime.now().toString())
-                        .data(Map.of("Success", isSuccess))
-                        .message("Account  Verified")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
+                responseApi( "Account  Verified", "success",
+                        isSuccess, HttpStatus.OK, HttpStatus.OK.value())
         );
+    }
+
+    private HttpResponse responseApi(String message, String mapObject, Object object, HttpStatus httpStatus, int statusCode) {
+        return HttpResponse.builder()
+                .timeStamp(LocalDateTime.now().toString())
+                .data(Map.of(mapObject, object))
+                .message(message)
+                .status(httpStatus)
+                .statusCode(statusCode)
+                .build();
     }
 }
