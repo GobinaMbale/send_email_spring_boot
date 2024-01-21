@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.eda.sendemail.service.impl.EmailServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.415 s - in com.eda.sendemail.service.impl.EmailServiceImplTest

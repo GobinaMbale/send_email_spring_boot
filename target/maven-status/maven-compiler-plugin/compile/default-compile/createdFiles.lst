@@ -1,0 +1,13 @@
+com\eda\sendemail\dto\MailDto$MailDtoBuilder.class
+com\eda\sendemail\dto\MimeMessageHelperDto$MimeMessageHelperDtoBuilderImpl.class
+com\eda\sendemail\service\impl\EmailServiceImpl.class
+com\eda\sendemail\dto\HttpResponse$HttpResponseBuilder.class
+com\eda\sendemail\dto\MailDto.class
+com\eda\sendemail\dto\MimeMessageHelperDto.class
+com\eda\sendemail\dto\MimeMessageHelperDto$MimeMessageHelperDtoBuilder.class
+com\eda\sendemail\service\EmailService.class
+com\eda\sendemail\dto\HttpResponse$HttpResponseBuilderImpl.class
+com\eda\sendemail\resource\MailResource.class
+com\eda\sendemail\SendemailApplication.class
+com\eda\sendemail\dto\HttpResponse.class
+com\eda\sendemail\dto\MailDto$MailDtoBuilderImpl.class

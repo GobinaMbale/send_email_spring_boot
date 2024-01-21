@@ -1,0 +1,16 @@
+#Server
+ACTIVE_PROFILE: prod
+SERVER_PORT: 9000
+
+#Email Config
+EMAIL_HOST: smtp.gmail.com
+EMAIL_PORT: 587
+EMAIL_USERNAME: gobinambale@gmail.com
+EMAIL_PASSWORD: mlxeahthhdqkeyjw
+VERIFY_EMAIL_HOST: http://localhost:${SERVER_PORT}
+
+#Image Resource
+IMAGE_1: /Downloads/images/woman.png
+IMAGE_2: /Downloads/images/icon.png
+DOCUMENT_FILE: /Downloads/images/data.docx
+IMAGE_LOGO: /Downloads/images/logo.png
