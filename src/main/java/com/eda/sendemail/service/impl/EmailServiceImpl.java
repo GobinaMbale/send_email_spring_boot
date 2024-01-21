@@ -1,5 +1,7 @@
 package com.eda.sendemail.service.impl;
 
+import com.eda.sendemail.dto.MailDto;
+import com.eda.sendemail.dto.MimeMessageHelperDto;
 import com.eda.sendemail.service.EmailService;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
@@ -10,8 +12,8 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -21,119 +23,107 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
-import static com.eda.sendemail.utils.EmailUtils.getVerificationUrl;
-import static com.eda.sendemail.utils.EmailUtils.getEmailMessage;
-
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
-    private static final String NEW_USER_ACCOUNT_VERIFICATION = "New User Account Verification";
-    private static final String ACCOUNT_VERIFICATION = "Account Verification";
     private static final String UTF_8_ENCODING = "UTF-8";
-    private static final String EMAILTEMPLATE = "emailtemplate";
+    private static final String EMAIL_TEMPLATE = "emailTemplate";
     private static final String TEXT_HTML_ENCODING = "text/html";
-    private static final String USER_HOME = "user.home";
     private final TemplateEngine templateEngine;
     private final JavaMailSender emailSender;
     @Value("${spring.mail.verify.host}")
     private String host;
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-    @Value("${variable.img_1}")
-    private String img1;
-    @Value("${variable.img_2}")
-    private String img2;
-    @Value("${variable.img_logo}")
-    private String imgLogo;
-    @Value("${variable.document_file}")
-    private String documentFile;
 
     @Override
     @Async
-    public void sendSimpleMailMessage(String name, String to, String token) {
+    public void sendSimpleMailMessage(MailDto mailDto) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setSubject(NEW_USER_ACCOUNT_VERIFICATION);
-            message.setFrom(fromEmail);
-            message.setTo(to);
-            message.setText(getEmailMessage(name, host, token));
-            emailSender.send(message);
+            SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+            simpleMailMessage.setSubject(mailDto.getSubject());
+            simpleMailMessage.setFrom(mailDto.getFrom());
+            simpleMailMessage.setTo(mailDto.getTo());
+            simpleMailMessage.setText(mailDto.getMessage());
+            emailSender.send(simpleMailMessage);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
             throw new RuntimeException(exception.getMessage());
         }
     }
 
     @Override
     @Async
-    public void sendMimeMessageWithAttachments(String name, String to, String token) {
+    public void sendMimeMessageWithAttachments(MailDto mailDto) {
         try {
-            MimeMessage message = getMimeMessage();
-            MimeMessageHelper helper = createMimeMessageHelper(message, to, ACCOUNT_VERIFICATION, fromEmail, getEmailMessage(name, host, token), false, true);
+            MimeMessage mimeMessage = getMimeMessage();
+            MimeMessageHelper helper = createMimeMessageHelper(mimeMessage, new MimeMessageHelperDto(mailDto.getTo(), mailDto.getSubject(), mailDto.getFrom(),
+                    mailDto.getMessage(), false, true));
             // TODO Add attachments
-            addAttachments(helper);
-            emailSender.send(message);
+            addAttachments(helper, mailDto.getFiles(), false);
+            emailSender.send(mimeMessage);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
             throw new RuntimeException(exception.getMessage());
         }
     }
 
     @Override
     @Async
-    public void sendMimeMessageWithEmbeddedImages(String name, String to, String token) {
+    public void sendMimeMessageWithEmbeddedImages(MailDto mailDto) {
         try {
-            MimeMessage message = getMimeMessage();
-            MimeMessageHelper helper = createMimeMessageHelper(message, to, NEW_USER_ACCOUNT_VERIFICATION, fromEmail, getEmailMessage(name, host, token), false, true);
+            MimeMessage mimeMessage = getMimeMessage();
+            MimeMessageHelper helper = createMimeMessageHelper(mimeMessage, new MimeMessageHelperDto(mailDto.getTo(), mailDto.getSubject(), mailDto.getFrom(),
+                    mailDto.getMessage(), false, true));
             // TODO Add attachments
-            addEmbeddedImages(helper);
-            emailSender.send(message);
+            addAttachments(helper, mailDto.getFiles(), true);
+            emailSender.send(mimeMessage);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
             throw new RuntimeException(exception.getMessage());
         }
     }
 
     @Override
     @Async
-    public void sendHtmlEmail(String name, String to, String token) {
+    public void sendHtmlEmail(MailDto mailDto) {
         try {
             Context context = new Context();
-            context.setVariables(Map.of("name", name, "url", getVerificationUrl(host, token)));
-            String text = templateEngine.process(EMAILTEMPLATE, context);
+            context.setVariables(Map.of("recipientName", mailDto.getRecipientName(), "url", mailDto.getMessage()));
+            String text = templateEngine.process(EMAIL_TEMPLATE, context);
             MimeMessage message = getMimeMessage();
-            createMimeMessageHelper(message, to, NEW_USER_ACCOUNT_VERIFICATION, fromEmail, text, true, true);
+            createMimeMessageHelper(message, new MimeMessageHelperDto(mailDto.getTo(), mailDto.getSubject(), mailDto.getFrom(), text, true, true));
             emailSender.send(message);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
             throw new RuntimeException(exception.getMessage());
         }
     }
 
     @Override
     @Async
-    public void sendHtmlEmailWithEmbeddedFiles(String name, String to, String token) {
+    public void sendHtmlEmailWithEmbeddedFiles(MailDto mailDto) {
         try {
 
-            MimeMessage message = getMimeMessage();
-            createMimeMessageHelper(message, to, NEW_USER_ACCOUNT_VERIFICATION, fromEmail, "", false, false);
+            MimeMessage mimeMessage = getMimeMessage();
+            createMimeMessageHelper(mimeMessage, new MimeMessageHelperDto(mailDto.getTo(), mailDto.getSubject(), mailDto.getFrom(), "", false, false));
 
             Context context = new Context();
-            context.setVariables(Map.of("name", name, "url", getVerificationUrl(host, token)));
-            String text = templateEngine.process(EMAILTEMPLATE, context);
+            context.setVariables(Map.of("recipientName", mailDto.getRecipientName(), "url", mailDto.getMessage()));
+            String text = templateEngine.process(EMAIL_TEMPLATE, context);
             // TODO HTML email body
             MimeMultipart mimeMultipart = addMimeMultipart(text);
 
             // TODO Add images to the email body
-            addImageBodyPart(mimeMultipart);
+            addImageBodyParts(mimeMultipart, mailDto.getFiles());
 
-            message.setContent(mimeMultipart);
+            mimeMessage.setContent(mimeMultipart);
 
-            emailSender.send(message);
+            emailSender.send(mimeMessage);
         } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+            log.info(exception.getMessage());
             throw new RuntimeException(exception.getMessage());
         }
     }
@@ -146,12 +136,14 @@ public class EmailServiceImpl implements EmailService {
         return "<" + filename + ">";
     }
 
-    private void addImageBodyPart(MimeMultipart mimeMultipart) throws MessagingException {
-        BodyPart imageBodyPart = new MimeBodyPart();
-        DataSource dataSource = new FileDataSource(System.getProperty(USER_HOME)  + imgLogo);
-        imageBodyPart.setDataHandler(new DataHandler(dataSource));
-        imageBodyPart.setHeader("Content-ID", "image");
-        mimeMultipart.addBodyPart(imageBodyPart);
+    private void addImageBodyParts(MimeMultipart mimeMultipart, List<File> files) throws MessagingException {
+        for(File file: files) {
+            BodyPart imageBodyPart = new MimeBodyPart();
+            DataSource dataSource = new FileDataSource(file.getPath());
+            imageBodyPart.setDataHandler(new DataHandler(dataSource));
+            imageBodyPart.setHeader("Content-ID", "image");
+            mimeMultipart.addBodyPart(imageBodyPart);
+        }
     }
 
     private MimeMultipart addMimeMultipart(String text) throws MessagingException {
@@ -162,34 +154,26 @@ public class EmailServiceImpl implements EmailService {
         return  mimeMultipart;
     }
 
-    private void addAttachments(MimeMessageHelper helper) throws MessagingException {
-        FileSystemResource woman = new FileSystemResource(new File(System.getProperty(USER_HOME) + img1));
-        FileSystemResource icon = new FileSystemResource(new File(System.getProperty(USER_HOME) + img2));
-        FileSystemResource data = new FileSystemResource(new File(System.getProperty(USER_HOME) + documentFile));
-
-        helper.addAttachment(woman.getFilename(), woman);
-        helper.addAttachment(icon.getFilename(), icon);
-        helper.addAttachment(data.getFilename(), data);
+    private void addAttachments(MimeMessageHelper helper, List<File> files, Boolean isUseOnlyImages) throws MessagingException {
+        if(!isUseOnlyImages) {
+            for (File file : files) {
+                helper.addAttachment(file.getName(), file);
+            }
+        } else {
+            for(File file : files) {
+                helper.addInline(getContentId(file.getName()), file);
+            }
+        }
     }
 
-    private void addEmbeddedImages(MimeMessageHelper helper) throws MessagingException {
-        FileSystemResource woman = new FileSystemResource(new File(System.getProperty(USER_HOME) + img1));
-        FileSystemResource icon = new FileSystemResource(new File(System.getProperty(USER_HOME) + img2));
-        FileSystemResource data = new FileSystemResource(new File(System.getProperty(USER_HOME) + documentFile));
-
-        helper.addInline(getContentId(woman.getFilename()), woman);
-        helper.addInline(getContentId(icon.getFilename()), icon);
-        helper.addInline(getContentId(data.getFilename()), data);
-    }
-
-    private MimeMessageHelper createMimeMessageHelper(MimeMessage message, String to, String subject, String from, String text, Boolean value, Boolean textIsUse) throws MessagingException {
+    private MimeMessageHelper createMimeMessageHelper(MimeMessage message, MimeMessageHelperDto mimeMessageHelperDto) throws MessagingException {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8_ENCODING);
         helper.setPriority(1);
-        helper.setSubject(subject);
-        helper.setFrom(from);
-        helper.setTo(to);
-        if(Boolean.TRUE.equals(textIsUse)) {
-            helper.setText(text, value);
+        helper.setSubject(mimeMessageHelperDto.getSubject());
+        helper.setFrom(mimeMessageHelperDto.getFrom());
+        helper.setTo(mimeMessageHelperDto.getTo());
+        if(Boolean.TRUE.equals(mimeMessageHelperDto.getTextIsUse())) {
+            helper.setText(mimeMessageHelperDto.getText(), mimeMessageHelperDto.getIsUseHtml());
         }
 
         return helper;

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: ${ACTIVE_PROFILE:dev}
+    active: ${ACTIVE_PROFILE:test}
   mail:
     host: ${EMAIL_HOST}
     port: ${EMAIL_PORT}

@@ -1,9 +1,11 @@
 package com.eda.sendemail.service;
 
+import com.eda.sendemail.dto.MailDto;
+
 public interface EmailService {
-    void sendSimpleMailMessage(String name, String to, String token);
-    void sendMimeMessageWithAttachments(String name, String to, String token);
-    void sendMimeMessageWithEmbeddedImages(String name, String to, String token);
-    void sendHtmlEmail(String name, String to, String token);
-    void sendHtmlEmailWithEmbeddedFiles(String name, String to, String token);
+    void sendSimpleMailMessage(MailDto mailDto);
+    void sendMimeMessageWithAttachments(MailDto mailDto);
+    void sendMimeMessageWithEmbeddedImages(MailDto mailDto);
+    void sendHtmlEmail(MailDto mailDto);
+    void sendHtmlEmailWithEmbeddedFiles(MailDto mailDto);
 }

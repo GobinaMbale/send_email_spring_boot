@@ -1,4 +1,4 @@
-package com.eda.sendemail.domain;
+package com.eda.sendemail.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
